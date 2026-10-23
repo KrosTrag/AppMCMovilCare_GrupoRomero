@@ -24,21 +24,21 @@ La solución esta organizada por paquetes según sus responsabilidades:
 
 * model/
 
-- UsuarioUiState.kt: Define la estructura de datos que representa el estado actual de la interfaz.
+ UsuarioUiState.kt: Define la estructura de datos que representa el estado actual de la interfaz.
 
 
 * viewmodel/
 
-- UsuarioViewModel.kt: Gestiona la lógica de negocio, procesamiento del formulario y comunicación con la vista.
+ UsuarioViewModel.kt: Gestiona la lógica de negocio, procesamiento del formulario y comunicación con la vista.
 
 
 * navigation/
 
-- Screen.kt: Define las rutas navegables de la aplicación de forma segura.
+ Screen.kt: Define las rutas navegables de la aplicación de forma segura.
   
 
 * ui/
 
-- screens/: Contiene las vistas principales (HomeScreenCompacta, RegistroScreen, ResumenScreen).
+ screens/: Contiene las vistas principales (HomeScreenCompacta, RegistroScreen, ResumenScreen).
 
-- components/: Componentes gráficos reutilizables (ImagenInteligente.kt).
+ components/: Componentes gráficos reutilizables (ImagenInteligente.kt).
