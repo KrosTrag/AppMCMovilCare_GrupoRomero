@@ -4,14 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+
+import com.example.appmcmovilcare_gruporomero.navigation.Screen
+import com.example.appmcmovilcare_gruporomero.ui.screens.HomeScreenCompacta
+import com.example.appmcmovilcare_gruporomero.ui.screens.RegistroScreen
+import com.example.appmcmovilcare_gruporomero.ui.screens.ResumenScreen
 import com.example.appmcmovilcare_gruporomero.ui.theme.AppMCmovilCare_GrupoRomeroTheme
+import com.example.appmcmovilcare_gruporomero.viewmodel.UsuarioViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +26,32 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AppMCmovilCare_GrupoRomeroTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                AppNavegacion()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun AppNavegacion() {
+    val navController = rememberNavController()
+    val usuarioViewModel: UsuarioViewModel = viewModel()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AppMCmovilCare_GrupoRomeroTheme {
-        Greeting("Android")
+    Scaffold { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(Screen.Home.route) {
+                HomeScreenCompacta(onNavegarRegistro = { navController.navigate(Screen.Registro.route) })
+            }
+            composable(Screen.Registro.route) {
+                RegistroScreen(navController = navController, viewModel = usuarioViewModel)
+            }
+            composable(Screen.Resumen.route) {
+                ResumenScreen(viewModel = usuarioViewModel)
+            }
+        }
     }
 }
