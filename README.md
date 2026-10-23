@@ -6,32 +6,39 @@ Aplicación móvil desarrollada en Kotlin para Android, enfocada en la gestión 
 
 El proyecto fue desarrollado siguiendo las mejores prácticas de desarrollo Android:
 
-Jetpack Compose: Declaración de la interfaz de usuario de forma moderna y reactiva.
 
-Arquitectura MVVM: Separación clara entre la vista y la lógica de negocio para un código mantenible.
+- Jetpack Compose: Declaración de la interfaz de usuario de forma moderna y reactiva.
 
-Navigation Compose: Gestión del flujo entre pantallas sin pérdidas de datos.
+- Arquitectura MVVM: Separación clara entre la vista y la lógica de negocio para un código mantenible.
 
-StateFlow & ViewModel: Preservación del estado de los datos durante los ciclos de vida de la aplicación.
+- Navigation Compose: Gestión del flujo entre pantallas sin pérdidas de datos.
 
-Estructura del Código
+- StateFlow & ViewModel: Preservación del estado de los datos durante los ciclos de vida de la aplicación.
+  
+
+# Estructura del Código
+
 
 La solución esta organizada por paquetes según sus responsabilidades:
 
-model/
 
-UsuarioUiState.kt: Define la estructura de datos que representa el estado actual de la interfaz.
+* model/
 
-viewmodel/
+- UsuarioUiState.kt: Define la estructura de datos que representa el estado actual de la interfaz.
 
-UsuarioViewModel.kt: Gestiona la lógica de negocio, procesamiento del formulario y comunicación con la vista.
 
-navigation/
+* viewmodel/
 
-Screen.kt: Define las rutas navegables de la aplicación de forma segura.
+- UsuarioViewModel.kt: Gestiona la lógica de negocio, procesamiento del formulario y comunicación con la vista.
 
-ui/
 
-screens/: Contiene las vistas principales (HomeScreenCompacta, RegistroScreen, ResumenScreen).
+* navigation/
 
-components/: Componentes gráficos reutilizables (ImagenInteligente.kt).
+- Screen.kt: Define las rutas navegables de la aplicación de forma segura.
+  
+
+* ui/
+
+- screens/: Contiene las vistas principales (HomeScreenCompacta, RegistroScreen, ResumenScreen).
+
+- components/: Componentes gráficos reutilizables (ImagenInteligente.kt).
