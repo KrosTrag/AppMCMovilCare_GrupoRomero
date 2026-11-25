@@ -4,7 +4,7 @@ Aplicación móvil de servicio técnico para ingresar solicitudes de reparación
 
 ## Integrantes
 
-Completar con los nombres oficiales del equipo antes de entregar.
+- Anthony Alexander Romero Bracamonte (único integrante; desarrollo y documentación del proyecto).
 
 ## Funcionalidades
 
@@ -98,7 +98,7 @@ El artefacto se genera en `app/build/outputs/apk/release/app-release.apk`. Conse
 
 ## Entrega colaborativa
 
-El código fuente se publica en [GitHub](https://github.com/KrosTrag/AppMCMovilCare_GrupoRomero). La entrega también requiere commits de cada integrante y evidencia verificable de planificación en Trello; completa los nombres oficiales del equipo en la sección Integrantes y adjunta capturas o enlaces reales. No se inventan integrantes ni evidencias.
+El código fuente y los commits técnicos se publican en [GitHub](https://github.com/KrosTrag/AppMCMovilCare_GrupoRomero). Este trabajo fue realizado individualmente por Anthony Alexander Romero Bracamonte; no se atribuyen aportes a otros integrantes. Aún falta crear y utilizar un tablero Trello real y adjuntar capturas/enlaces de sus tarjetas; `docs/PLANIFICACION_TRELLO.md` contiene una guía y tarjetas sugeridas, pero no sustituye esa evidencia.
 
 ## Documentación técnica
 
