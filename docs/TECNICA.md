@@ -32,7 +32,7 @@ MCmovil Care representa un servicio técnico de equipos TI: el cliente registra 
 
 ## Pruebas y cobertura
 
-Las pruebas Android cubren datos completos, campos obligatorios y formato de correo (`TicketFormValidatorTest`). Las pruebas del microservicio de tickets cubren creación, consulta, edición autorizada/no autorizada, estados, eliminación y comunicación con identidad. Las pruebas de `auth-service` verifican credenciales, persistencia de sesiones, validación, expiración e invalidación al cerrar sesión. `:backend:check` y `:auth-service:check` aplican un umbral de cobertura de líneas del 80% a sus servicios principales.
+Las pruebas Android cubren validación de formularios, delegación del repositorio para flujos de cliente/administrador/API externa y conversión del DTO remoto a Room. `:app:check` impone 80% de cobertura de líneas al validador, repositorio y mapeo del ticket; el informe JaCoCo queda en `app/build/reports/jacoco/jacocoDebugUnitTestReport/html/index.html`. Las pruebas del microservicio de tickets cubren creación, consulta, edición autorizada/no autorizada, estados, eliminación y comunicación con identidad. Las pruebas de `auth-service` verifican credenciales, persistencia de sesiones, validación, expiración e invalidación al cerrar sesión. `:backend:check` y `:auth-service:check` aplican un umbral de cobertura de líneas del 80% a sus servicios principales.
 
 ## Configuración de despliegue
 
