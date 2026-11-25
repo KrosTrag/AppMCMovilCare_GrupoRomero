@@ -1,4 +1,4 @@
-package com.example.mcmovilcare.ui.components
+package com.example.appmcmovilcare_gruporomero.ui.components
 
 import android.net.Uri
 import androidx.compose.foundation.Image

@@ -8,3 +8,8 @@
 .externalNativeBuild/
 .cxx/
 local.properties
+/app/signing/
+/app/release-key.jks
+/backend/data/
+/backend/build/
+/backend/out/
