@@ -82,6 +82,8 @@ dependencies {
 
     // Test dependencies
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.mockito:mockito-core:5.12.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -93,7 +95,8 @@ val appLogicClasses = fileTree(
     include(
         "com/example/appmcmovilcare_gruporomero/model/TicketFormValidator*.class",
         "com/example/appmcmovilcare_gruporomero/data/remote/TicketRepository*.class",
-        "com/example/appmcmovilcare_gruporomero/data/remote/TicketDto*.class"
+        "com/example/appmcmovilcare_gruporomero/data/remote/TicketDto*.class",
+        "com/example/appmcmovilcare_gruporomero/viewmodel/UsuarioViewModel*.class"
     )
 }
 

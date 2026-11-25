@@ -14,7 +14,7 @@ Completar con los nombres oficiales del equipo antes de entregar.
 - Consulta y edición de la descripción del problema por el cliente, comprobando el ID de la orden y el correo asociado.
 - Inicio de sesión exclusivo para el administrador. El panel permite listar solicitudes, avanzar su estado y eliminarlas.
 - Consumo Retrofit de catálogo externo de teléfonos desde DummyJSON; si la API externa no responde, las demás funciones siguen disponibles.
-- Pruebas unitarias Android para validación, repositorio, contratos y mapeo, con umbral JaCoCo del 80% en la lógica de negocio móvil; backend también exige 80% en sus servicios principales.
+- Pruebas unitarias Android para validación, `UsuarioViewModel`, repositorio, contratos y mapeo, con umbral JaCoCo del 80% en la lógica de negocio móvil; backend también exige 80% en sus servicios principales.
 - Configuración Gradle para generar un APK release firmado usando variables de entorno y un almacén de claves local.
 
 ## Arquitectura
@@ -76,7 +76,7 @@ Credenciales de desarrollo por defecto: `admin@mcmovilcare.local` / `AdminLocal2
 .\gradlew.bat ':auth-service:check'
 ```
 
-`:app:check` incluye pruebas unitarias y exige 80% de cobertura de líneas en el validador, el repositorio y el mapeo del ticket; el informe está en `app/build/reports/jacoco/jacocoDebugUnitTestReport/html/index.html`. `:backend:check` ejecuta las pruebas del servicio de tickets y falla si la cobertura de líneas de `TicketService` o su cliente de autenticación queda bajo 80%. `:auth-service:check` verifica el servicio de identidad y exige 80% de cobertura en `AdminAuthService`. Informes backend: `backend/build/reports/jacoco/test/html/index.html` y `auth-service/build/reports/jacoco/test/html/index.html`.
+`:app:check` incluye pruebas unitarias y exige 80% de cobertura de líneas en `UsuarioViewModel`, el validador, el repositorio y el mapeo del ticket; el informe está en `app/build/reports/jacoco/jacocoDebugUnitTestReport/html/index.html`. `:backend:check` ejecuta las pruebas del servicio de tickets y falla si la cobertura de líneas de `TicketService` o su cliente de autenticación queda bajo 80%. `:auth-service:check` verifica el servicio de identidad y exige 80% de cobertura en `AdminAuthService`. Informes backend: `backend/build/reports/jacoco/test/html/index.html` y `auth-service/build/reports/jacoco/test/html/index.html`.
 
 ## APK release firmado
 

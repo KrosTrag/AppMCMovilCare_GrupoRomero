@@ -4,8 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appmcmovilcare_gruporomero.data.local.AppDatabase
+import com.example.appmcmovilcare_gruporomero.data.local.OrdenDao
 import com.example.appmcmovilcare_gruporomero.data.local.OrdenTrabajoEntity
 import com.example.appmcmovilcare_gruporomero.data.remote.CreateTicketRequest
+import com.example.appmcmovilcare_gruporomero.data.remote.TicketDataSource
 import com.example.appmcmovilcare_gruporomero.data.remote.TicketRepository
 import com.example.appmcmovilcare_gruporomero.model.AdminUiState
 import com.example.appmcmovilcare_gruporomero.model.CatalogoUiState
@@ -23,9 +25,11 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
-class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
-    private val ordenDao = AppDatabase.getDatabase(application).ordenDao()
-    private val repository = TicketRepository()
+class UsuarioViewModel @JvmOverloads constructor(
+    application: Application,
+    private val ordenDao: OrdenDao = AppDatabase.getDatabase(application).ordenDao(),
+    private val repository: TicketDataSource = TicketRepository()
+) : AndroidViewModel(application) {
 
     val ordenesLocales: StateFlow<List<OrdenTrabajoEntity>> =
         ordenDao.obtenerTodasLasOrdenes().stateIn(
