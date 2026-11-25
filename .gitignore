@@ -13,3 +13,6 @@ local.properties
 /backend/data/
 /backend/build/
 /backend/out/
+/auth-service/data/
+/auth-service/build/
+/auth-service/out/

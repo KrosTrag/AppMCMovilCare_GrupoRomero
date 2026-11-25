@@ -25,4 +25,5 @@ dependencyResolutionManagement {
 rootProject.name = "AppMCmovilCare_GrupoRomero"
 include(":app")
 include(":backend")
+include(":auth-service")
  

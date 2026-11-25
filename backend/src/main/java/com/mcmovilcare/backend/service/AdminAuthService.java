@@ -1,54 +1,68 @@
 package com.mcmovilcare.backend.service;
 
+import com.mcmovilcare.backend.api.TicketDtos.AdminLoginRequest;
 import com.mcmovilcare.backend.api.TicketDtos.AdminLoginResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 @Service
 public class AdminAuthService {
-    private final String adminEmail;
-    private final String adminPassword;
-    private final Set<String> tokens = ConcurrentHashMap.newKeySet();
+    private final RestClient authService;
 
-    public AdminAuthService(@Value("${app.admin.email}") String adminEmail,
-                            @Value("${app.admin.password}") String adminPassword) {
-        this.adminEmail = adminEmail;
-        this.adminPassword = adminPassword;
+    public AdminAuthService(RestClient.Builder restClientBuilder,
+                            @Value("${app.auth-service.url}") String authServiceUrl) {
+        this.authService = restClientBuilder.baseUrl(authServiceUrl).build();
     }
 
     public AdminLoginResponse iniciarSesion(String email, String password) {
-        if (!constanteIgual(adminEmail, email) || !constanteIgual(adminPassword, password)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales de administrador incorrectas");
-        }
-        String token = UUID.randomUUID().toString();
-        tokens.add(token);
-        return new AdminLoginResponse(token, adminEmail);
+        return ejecutar(() -> authService.post()
+                .uri("/api/auth/admin")
+                .body(new AdminLoginRequest(email, password))
+                .retrieve()
+                .body(AdminLoginResponse.class));
     }
 
     public void validarToken(String token) {
-        if (token == null || !tokens.contains(token)) {
+        if (token == null || token.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sesión de administrador no válida");
         }
+        ejecutar(() -> authService.post()
+                .uri("/internal/sessions/validate")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity());
     }
 
     public void cerrarSesion(String token) {
-        if (token != null) {
-            tokens.remove(token);
+        if (token == null || token.isBlank()) {
+            return;
         }
+        ejecutar(() -> authService.post()
+                .uri("/api/auth/admin/logout")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity());
     }
 
-    private static boolean constanteIgual(String expected, String actual) {
-        if (expected == null || actual == null) {
-            return false;
+    private <T> T ejecutar(Supplier<T> request) {
+        try {
+            return request.get();
+        } catch (RestClientResponseException exception) {
+            HttpStatus status = exception.getStatusCode().value() == HttpStatus.UNAUTHORIZED.value()
+                    ? HttpStatus.UNAUTHORIZED
+                    : HttpStatus.SERVICE_UNAVAILABLE;
+            throw new ResponseStatusException(status, "No fue posible completar la solicitud de autenticación");
+        } catch (RestClientException exception) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Servicio de autenticación no disponible");
         }
-        return MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8), actual.getBytes(StandardCharsets.UTF_8));
     }
 }

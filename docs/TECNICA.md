@@ -15,11 +15,12 @@ MCmovil Care representa un servicio técnico de equipos TI: el cliente registra 
 
 ### Spring Boot
 
-- `TicketController`: alta y operaciones de propietario.
-- `AdminTicketController`: lectura completa, modificación de estado y eliminación; cada operación requiere un token válido.
-- `AdminAuthController`/`AdminAuthService`: autentican al administrador configurado y emiten tokens aleatorios de sesión.
+- `backend/` ejecuta el microservicio de tickets en el puerto `8080`. `TicketController` permite crear, consultar y editar solicitudes; `AdminTicketController` gestiona el panel y valida la sesión consultando al servicio de identidad.
 - `TicketService`: genera ID, verifica el correo propietario, valida transiciones de estado y delega persistencia en JPA.
-- H2 mantiene los datos en `backend/data/`; durante el desarrollo se habilita consola local en `/h2-console`.
+- La base H2 exclusiva de tickets se guarda en `backend/data/tickets`; no almacena credenciales ni sesiones administrativas.
+- `auth-service/` ejecuta el microservicio de identidad en el puerto `8081`. Sus endpoints públicos gestionan login/logout; `/internal/sessions/validate` permite al backend comprobar tokens.
+- La base H2 exclusiva de identidad se guarda en `auth-service/data/authentication` y contiene usuarios y sesiones. Las contraseñas se almacenan con BCrypt y las sesiones expiran según `ADMIN_SESSION_HOURS`.
+- El backend mantiene `/api/auth/admin` como fachada compatible para Android y reenvía esas solicitudes al microservicio de identidad configurado por `AUTH_SERVICE_URL`.
 
 ## Contratos de datos y permisos
 
@@ -31,11 +32,12 @@ MCmovil Care representa un servicio técnico de equipos TI: el cliente registra 
 
 ## Pruebas y cobertura
 
-Las pruebas Android cubren datos completos, campos obligatorios y formato de correo (`TicketFormValidatorTest`). Las pruebas backend cubren creación, consulta, actualización autorizada/no autorizada, IDs inexistentes, estados, eliminación y login/logout. `:backend:check` exige al menos 80% de cobertura de líneas en `TicketService` y `AdminAuthService`; el informe se genera en `backend/build/reports/jacoco/test/html/`.
+Las pruebas Android cubren datos completos, campos obligatorios y formato de correo (`TicketFormValidatorTest`). Las pruebas del microservicio de tickets cubren creación, consulta, edición autorizada/no autorizada, estados, eliminación y comunicación con identidad. Las pruebas de `auth-service` verifican credenciales, persistencia de sesiones, validación, expiración e invalidación al cerrar sesión. `:backend:check` y `:auth-service:check` aplican un umbral de cobertura de líneas del 80% a sus servicios principales.
 
 ## Configuración de despliegue
 
 - Android usa `apiBaseUrl` Gradle property; por defecto `http://10.0.2.2:8080/` para emulador.
-- Backend acepta `PORT`, `ADMIN_EMAIL` y `ADMIN_PASSWORD` desde entorno.
-- La clave privada de release y las contraseñas deben almacenarse fuera del repositorio. La autenticación de demostración utiliza sesiones en memoria; al reiniciar el backend se invalidan. En despliegue real se recomienda HTTPS, contraseña hasheada, límites de intentos, expiración de tokens y una solución de identidad más robusta que ID+correo.
+- Tickets acepta `PORT` y `AUTH_SERVICE_URL`; identidad acepta `AUTH_PORT`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `ADMIN_SESSION_HOURS`. Las credenciales administrativas solo se configuran en identidad y no se comparten con el servicio de tickets.
+- Ejecuta `:auth-service:bootRun` y `:backend:bootRun` en terminales separados; para la app en un emulador Android, configura `AUTH_SERVICE_URL=http://localhost:8081` en el proceso backend.
+- Las bases son ficheros separados y están excluidas de Git. La clave privada de release y las contraseñas también deben mantenerse fuera del repositorio. En despliegues reales se recomienda HTTPS, gestión segura de secretos, límites de intentos y control del acceso de red al endpoint interno de validación.
 - GitHub/Trello requieren acciones y evidencia del equipo, no reproducibles desde esta carpeta sin el repositorio remoto y sus accesos.

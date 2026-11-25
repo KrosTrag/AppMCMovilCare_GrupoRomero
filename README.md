@@ -9,7 +9,8 @@ Completar con los nombres oficiales del equipo antes de entregar.
 ## Funcionalidades
 
 - Registro de solicitudes de diagnóstico desde Android con Kotlin y Jetpack Compose.
-- Persistencia remota de órdenes mediante microservicio Spring Boot y base de datos H2; Room mantiene una copia local de las solicitudes consultadas.
+- Persistencia remota de órdenes en un microservicio Spring Boot con su propia base H2; Room mantiene una copia local de las solicitudes consultadas.
+- Autenticación administrativa en un segundo microservicio Spring Boot con una base H2 independiente para usuarios y sesiones.
 - Consulta y edición de la descripción del problema por el cliente, comprobando el ID de la orden y el correo asociado.
 - Inicio de sesión exclusivo para el administrador. El panel permite listar solicitudes, avanzar su estado y eliminarlas.
 - Consumo Retrofit de catálogo externo de teléfonos desde DummyJSON; si la API externa no responde, las demás funciones siguen disponibles.
@@ -19,7 +20,9 @@ Completar con los nombres oficiales del equipo antes de entregar.
 ## Arquitectura
 
 - `app/`: cliente Android Kotlin/Compose, Retrofit, Room y navegación.
-- `backend/`: microservicio Spring Boot REST, JPA y H2.
+- `backend/`: microservicio Spring Boot REST para solicitudes, con JPA y base H2 exclusiva de tickets.
+- `auth-service/`: microservicio Spring Boot para login y sesiones de administrador, con JPA y base H2 exclusiva de autenticación.
+- Los servicios no comparten tablas ni base de datos; el backend de tickets consulta al servicio de autenticación para autorizar el panel.
 - Contexto EFT: recepción de equipos y seguimiento de problemas de hardware/software, manteniendo separados los permisos del administrador y del cliente.
 
 ## APIs y endpoints
@@ -37,15 +40,22 @@ Microservicio propio (base URL Android por defecto: `http://10.0.2.2:8080/`):
 | `PATCH` | `/api/admin/tickets/{id}/status` | Administrador | Cambiar estado |
 | `DELETE` | `/api/admin/tickets/{id}` | Administrador | Eliminar solicitud |
 
-El backend usa H2 persistente en `backend/data/`. El catálogo externo se consume desde `https://dummyjson.com/products/category/smartphones?limit=5`.
+El microservicio de tickets usa H2 persistente en `backend/data/`; autenticación guarda usuarios y sesiones (contraseñas con BCrypt y sesiones con vencimiento) en `auth-service/data/`. El catálogo externo se consume desde `https://dummyjson.com/products/category/smartphones?limit=5`.
 
 ## Requisitos y ejecución local
 
-Se requiere Android Studio/SDK Android y Java 17 o posterior. El backend se ejecuta en el puerto `8080`; la configuración de administrador puede sobrescribirse con `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
+Se requiere Android Studio/SDK Android y Java 17 o posterior. El servicio de tickets usa el puerto `8080` y el servicio de autenticación `8081`. Configura `ADMIN_EMAIL` y `ADMIN_PASSWORD` solo en el proceso de autenticación.
 
 ```powershell
 $env:ADMIN_EMAIL = 'admin@tu-dominio.cl'
 $env:ADMIN_PASSWORD = 'DefineUnaClaveLocalSegura'
+.\gradlew.bat ':auth-service:bootRun'
+```
+
+En otro terminal ejecuta el servicio de tickets, apuntándolo al servicio de autenticación:
+
+```powershell
+$env:AUTH_SERVICE_URL = 'http://localhost:8081'
 .\gradlew.bat ':backend:bootRun'
 ```
 
@@ -62,9 +72,10 @@ Credenciales de desarrollo por defecto: `admin@mcmovilcare.local` / `AdminLocal2
 ```powershell
 .\gradlew.bat ':app:testDebugUnitTest'
 .\gradlew.bat ':backend:check'
+.\gradlew.bat ':auth-service:check'
 ```
 
-El segundo comando ejecuta las pruebas backend y falla si la cobertura de líneas de `TicketService` o `AdminAuthService` queda bajo 80%. Informe JaCoCo: `backend/build/reports/jacoco/test/html/index.html`.
+`:backend:check` ejecuta las pruebas del servicio de tickets y falla si la cobertura de líneas de `TicketService` o su cliente de autenticación queda bajo 80%. `:auth-service:check` verifica el servicio de identidad y exige 80% de cobertura en `AdminAuthService`. Informes JaCoCo: `backend/build/reports/jacoco/test/html/index.html` y `auth-service/build/reports/jacoco/test/html/index.html`.
 
 ## APK release firmado
 

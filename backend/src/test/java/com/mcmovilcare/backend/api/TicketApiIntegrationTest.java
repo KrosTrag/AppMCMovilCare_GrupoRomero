@@ -2,7 +2,9 @@ package com.mcmovilcare.backend.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mcmovilcare.backend.api.TicketDtos.AdminLoginResponse;
 import com.mcmovilcare.backend.domain.TicketRepository;
+import com.mcmovilcare.backend.service.AdminAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +13,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,18 +30,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:care-api-test;DB_CLOSE_DELAY=-1",
         "spring.jpa.hibernate.ddl-auto=create-drop",
-        "app.admin.email=admin@test.local",
-        "app.admin.password=test-password"
+        "app.auth-service.url=http://localhost:9999"
 })
 @AutoConfigureMockMvc
 class TicketApiIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private TicketRepository ticketRepository;
+    @MockitoBean private AdminAuthService authService;
 
     @BeforeEach
     void limpiarSolicitudes() {
         ticketRepository.deleteAll();
+        doAnswer(invocation -> {
+            String token = invocation.getArgument(0);
+            if (!"token-de-prueba".equals(token)) {
+                throw new ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED);
+            }
+            return null;
+        }).when(authService).validarToken(nullable(String.class));
+        when(authService.iniciarSesion("admin@test.local", "test-password"))
+                .thenReturn(new AdminLoginResponse("token-de-prueba", "admin@test.local"));
     }
 
     @Test
