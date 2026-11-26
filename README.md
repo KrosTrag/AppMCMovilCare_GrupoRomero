@@ -46,6 +46,15 @@ El microservicio de tickets usa H2 persistente en `backend/data/`; autenticació
 
 Se requiere Android Studio/SDK Android y Java 17 o posterior. El servicio de tickets usa el puerto `8080` y el servicio de autenticación `8081`. Configura `ADMIN_EMAIL` y `ADMIN_PASSWORD` solo en el proceso de autenticación.
 
+### Preparar otro computador
+
+1. Instala Android Studio, JDK 17, Android SDK Platform 36 y Android Build Tools 36.0.0.
+2. Clona el repositorio y abre como proyecto la carpeta raíz `AppMCmovilCare_GrupoRomero`; deja que Android Studio sincronice Gradle y seleccione la ubicación local del SDK.
+3. `local.properties` es específico de cada computador y está excluido de Git. No copies el archivo de este equipo; Android Studio lo vuelve a crear. Para compilar desde terminal, configura `ANDROID_HOME` o `ANDROID_SDK_ROOT` con la ruta del SDK.
+4. Comprueba el entorno desde PowerShell con `.\gradlew.bat 'check'`.
+
+La primera sincronización y compilación requieren internet para descargar Gradle/dependencias. La app móvil funciona en un emulador Android; para usarla en un teléfono físico configura la IP LAN del computador como `apiBaseUrl` y permite la conexión en la red local.
+
 ```powershell
 $env:ADMIN_EMAIL = 'admin@tu-dominio.cl'
 $env:ADMIN_PASSWORD = 'DefineUnaClaveLocalSegura'
@@ -95,6 +104,8 @@ $env:RELEASE_KEY_PASSWORD = 'TU_CLAVE_DE_LA_LLAVE'
 ```
 
 El artefacto se genera en `app/build/outputs/apk/release/app-release.apk`. Conserva de forma segura una copia de respaldo de la llave: no es posible volver a firmar actualizaciones con una llave perdida. La configuración Gradle lee las variables anteriores y no contiene secretos. Para cambiar el endpoint del backend al crear el release, agrega `-PapiBaseUrl=https://<servidor>/`.
+
+Android Gradle Plugin detiene el empaquetado release si falta la configuración de firma, evitando tratar un APK sin firmar como listo para entrega. Después de compilar, verifica la firma desde PowerShell con `apksigner verify --verbose --print-certs 'app\build\outputs\apk\release\app-release.apk'` (la herramienta está en `Android\Sdk\build-tools\36.0.0`). El APK y el almacén local están excluidos de Git: entrega el APK como artefacto y la llave por el canal privado que indique el docente; no publiques la llave privada en un repositorio público.
 
 ## Entrega colaborativa
 

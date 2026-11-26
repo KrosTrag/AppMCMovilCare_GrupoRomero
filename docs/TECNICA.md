@@ -37,7 +37,8 @@ Las pruebas Android cubren validación de formularios, registro, edición del cl
 ## Configuración de despliegue
 
 - Android usa `apiBaseUrl` Gradle property; por defecto `http://10.0.2.2:8080/` para emulador.
+- En un computador nuevo se requiere JDK 17 y Android SDK Platform 36/Build Tools 36.0.0. `local.properties` contiene la ruta local del SDK, se excluye de Git y debe generarse en cada equipo.
 - Tickets acepta `PORT` y `AUTH_SERVICE_URL`; identidad acepta `AUTH_PORT`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `ADMIN_SESSION_HOURS`. Las credenciales administrativas solo se configuran en identidad y no se comparten con el servicio de tickets.
 - Ejecuta `:auth-service:bootRun` y `:backend:bootRun` en terminales separados; para la app en un emulador Android, configura `AUTH_SERVICE_URL=http://localhost:8081` en el proceso backend.
-- Las bases son ficheros separados y están excluidas de Git. La clave privada de release y las contraseñas también deben mantenerse fuera del repositorio. En despliegues reales se recomienda HTTPS, gestión segura de secretos, límites de intentos y control del acceso de red al endpoint interno de validación.
+- Las bases son ficheros separados y están excluidas de Git. Android Gradle Plugin requiere la configuración de firma para generar el APK release; verifica el resultado con `apksigner`. La clave privada y contraseñas se entregan por un canal privado, no en el repositorio público. En despliegues reales se recomienda HTTPS, gestión segura de secretos, límites de intentos y control del acceso de red al endpoint interno de validación.
 - GitHub/Trello requieren acciones y evidencia del equipo, no reproducibles desde esta carpeta sin el repositorio remoto y sus accesos.
