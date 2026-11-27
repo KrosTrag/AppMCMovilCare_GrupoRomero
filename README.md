@@ -44,16 +44,18 @@ El microservicio de tickets usa H2 persistente en `backend/data/`; autenticació
 
 ## Requisitos y ejecución local
 
-Se requiere Android Studio/SDK Android y Java 17 o posterior. El servicio de tickets usa el puerto `8080` y el servicio de autenticación `8081`. Configura `ADMIN_EMAIL` y `ADMIN_PASSWORD` solo en el proceso de autenticación.
+Se requiere Android Studio, Android SDK y JDK 25 para el daemon de Gradle (versión indicada en `gradle/gradle-daemon-jvm.properties`). Los microservicios compilan con Java 17. El servicio de tickets usa el puerto `8080` y el servicio de autenticación `8081`. Configura `ADMIN_EMAIL` y `ADMIN_PASSWORD` solo en el proceso de autenticación.
 
 ### Preparar otro computador
 
-1. Instala Android Studio, JDK 17, Android SDK Platform 36 y Android Build Tools 36.0.0.
-2. Clona el repositorio y abre como proyecto la carpeta raíz `AppMCmovilCare_GrupoRomero`; deja que Android Studio sincronice Gradle y seleccione la ubicación local del SDK.
-3. `local.properties` es específico de cada computador y está excluido de Git. No copies el archivo de este equipo; Android Studio lo vuelve a crear. Para compilar desde terminal, configura `ANDROID_HOME` o `ANDROID_SDK_ROOT` con la ruta del SDK.
+1. Instala Android Studio, JDK 25, Android SDK Platform 36 y Android Build Tools 36.0.0. Si Android Studio usa otro JDK, configura JDK 25 como Gradle JDK; el resolver de Gradle también puede descargarlo durante la primera sincronización.
+2. Si recibes esta carpeta, descarga/sincroniza todos sus archivos localmente y abre en Android Studio la carpeta raíz que contiene `settings.gradle.kts` y `gradlew.bat` (no abras solo `app/`). También puedes clonar el repositorio y abrir su raíz. Si OneDrive bloquea archivos al compilar, copia el proyecto a una carpeta local fuera de OneDrive antes de ejecutar Gradle.
+3. `local.properties` es específico de cada computador y no se incluye en la entrega. Deja que Android Studio detecte el SDK local y lo genere; no copies el archivo de otro computador. Para compilar desde terminal, configura `ANDROID_HOME` o `ANDROID_SDK_ROOT` con la ruta del SDK.
 4. Comprueba el entorno desde PowerShell con `.\gradlew.bat 'check'`.
 
-La primera sincronización y compilación requieren internet para descargar Gradle/dependencias. La app móvil funciona en un emulador Android; para usarla en un teléfono físico configura la IP LAN del computador como `apiBaseUrl` y permite la conexión en la red local.
+La primera sincronización y compilación requieren internet para descargar Gradle, el JDK 25 si no está instalado y las dependencias. La app móvil funciona en un emulador Android; para usarla en un teléfono físico configura la IP LAN del computador como `apiBaseUrl` y permite la conexión en la red local.
+
+La copia de entrega incluye el APK firmado en `ENTREGA/app-release.apk`; puede instalarse para revisar la aplicación. Para ejecutar la aplicación con los microservicios, inicia ambos servicios siguiendo los pasos siguientes y usa un emulador en el mismo computador. En OneDrive, espera a que la carpeta esté descargada localmente antes de abrirla en Android Studio.
 
 ```powershell
 $env:ADMIN_EMAIL = 'admin@tu-dominio.cl'

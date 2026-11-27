@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminAuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.backend.service</a> &gt; <span class="el_source">AdminAuthService.java</span></div><h1>AdminAuthService.java</h1><pre class="source lang-java linenums">package com.mcmovilcare.backend.service;
+
+import com.mcmovilcare.backend.api.TicketDtos.AdminLoginRequest;
+import com.mcmovilcare.backend.api.TicketDtos.AdminLoginResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.function.Supplier;
+
+@Service
+public class AdminAuthService {
+    private final RestClient authService;
+
+    public AdminAuthService(RestClient.Builder restClientBuilder,
+<span class="fc" id="L21">                            @Value(&quot;${app.auth-service.url}&quot;) String authServiceUrl) {</span>
+<span class="fc" id="L22">        this.authService = restClientBuilder.baseUrl(authServiceUrl).build();</span>
+<span class="fc" id="L23">    }</span>
+
+    public AdminLoginResponse iniciarSesion(String email, String password) {
+<span class="fc" id="L26">        return ejecutar(() -&gt; authService.post()</span>
+<span class="fc" id="L27">                .uri(&quot;/api/auth/admin&quot;)</span>
+<span class="fc" id="L28">                .body(new AdminLoginRequest(email, password))</span>
+<span class="fc" id="L29">                .retrieve()</span>
+<span class="fc" id="L30">                .body(AdminLoginResponse.class));</span>
+    }
+
+    public void validarToken(String token) {
+<span class="pc bpc" id="L34" title="1 of 4 branches missed.">        if (token == null || token.isBlank()) {</span>
+<span class="fc" id="L35">            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Sesión de administrador no válida&quot;);</span>
+        }
+<span class="fc" id="L37">        ejecutar(() -&gt; authService.post()</span>
+<span class="fc" id="L38">                .uri(&quot;/internal/sessions/validate&quot;)</span>
+<span class="fc" id="L39">                .header(HttpHeaders.AUTHORIZATION, &quot;Bearer &quot; + token)</span>
+<span class="fc" id="L40">                .retrieve()</span>
+<span class="fc" id="L41">                .toBodilessEntity());</span>
+<span class="fc" id="L42">    }</span>
+
+    public void cerrarSesion(String token) {
+<span class="pc bpc" id="L45" title="1 of 4 branches missed.">        if (token == null || token.isBlank()) {</span>
+<span class="fc" id="L46">            return;</span>
+        }
+<span class="fc" id="L48">        ejecutar(() -&gt; authService.post()</span>
+<span class="fc" id="L49">                .uri(&quot;/api/auth/admin/logout&quot;)</span>
+<span class="fc" id="L50">                .header(HttpHeaders.AUTHORIZATION, &quot;Bearer &quot; + token)</span>
+<span class="fc" id="L51">                .retrieve()</span>
+<span class="fc" id="L52">                .toBodilessEntity());</span>
+<span class="fc" id="L53">    }</span>
+
+    private &lt;T&gt; T ejecutar(Supplier&lt;T&gt; request) {
+        try {
+<span class="fc" id="L57">            return request.get();</span>
+<span class="fc" id="L58">        } catch (RestClientResponseException exception) {</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">            HttpStatus status = exception.getStatusCode().value() == HttpStatus.UNAUTHORIZED.value()</span>
+<span class="fc" id="L60">                    ? HttpStatus.UNAUTHORIZED</span>
+<span class="fc" id="L61">                    : HttpStatus.SERVICE_UNAVAILABLE;</span>
+<span class="fc" id="L62">            throw new ResponseStatusException(status, &quot;No fue posible completar la solicitud de autenticación&quot;);</span>
+<span class="fc" id="L63">        } catch (RestClientException exception) {</span>
+<span class="fc" id="L64">            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,</span>
+                    &quot;Servicio de autenticación no disponible&quot;);
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

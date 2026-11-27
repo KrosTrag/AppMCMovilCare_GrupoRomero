@@ -4,13 +4,13 @@ Proyecto individual de Anthony Alexander Romero Bracamonte. Esta página organiz
 
 ## Pruebas automatizadas
 
-Las pruebas se reejecutaron el 26 de noviembre de 2026. Gradle terminó con `BUILD SUCCESSFUL`: 31 pruebas, 0 fallos y 0 omitidas.
+Los reportes HTML incluidos corresponden a la ejecución del 26 de noviembre de 2026. El 27 de noviembre se volvió a ejecutar `gradlew.bat check` desde la carpeta de entrega y terminó con `BUILD SUCCESSFUL`: 31 pruebas, 0 fallos y 0 omitidas.
 
 | Módulo | Pruebas | Fallos | Reporte HTML |
 |---|---:|---:|---|
-| Android | 16 | 0 | [`app/build/reports/tests/testDebugUnitTest/index.html`](../app/build/reports/tests/testDebugUnitTest/index.html) |
-| Autenticación | 3 | 0 | [`auth-service/build/reports/tests/test/index.html`](../auth-service/build/reports/tests/test/index.html) |
-| Tickets | 12 | 0 | [`backend/build/reports/tests/test/index.html`](../backend/build/reports/tests/test/index.html) |
+| Android | 16 | 0 | [Reporte HTML](reportes/android/pruebas/index.html) |
+| Autenticación | 3 | 0 | [Reporte HTML](reportes/autenticacion/pruebas/index.html) |
+| Tickets | 12 | 0 | [Reporte HTML](reportes/tickets/pruebas/index.html) |
 
 Capturas listas para adjuntar al PDF:
 
@@ -18,15 +18,15 @@ Capturas listas para adjuntar al PDF:
 - Autenticación: ![Pruebas de autenticación: 3 pruebas, 0 fallos](evidencias/pruebas-autenticacion.png)
 - Tickets: ![Pruebas de tickets: 12 pruebas, 0 fallos](evidencias/pruebas-tickets.png)
 
-Los informes HTML originales están bajo `build/` y se regeneran localmente; no se incluyen en el repositorio Git.
+Se incluyen copias HTML de los informes en `docs/reportes/` para consulta sin compilar. Al ejecutar las pruebas, Gradle vuelve a generar los informes de trabajo bajo `build/`.
 
 ## Cobertura JaCoCo
 
 Los tres informes HTML se generaron y las verificaciones de cobertura finalizaron con éxito. Los umbrales configurados son de al menos 80% en las clases de lógica seleccionadas por cada módulo; no representan una afirmación de 80% para todo el código fuente.
 
-- Android: [`app/build/reports/jacoco/jacocoDebugUnitTestReport/html/index.html`](../app/build/reports/jacoco/jacocoDebugUnitTestReport/html/index.html)
-- Autenticación: [`auth-service/build/reports/jacoco/test/html/index.html`](../auth-service/build/reports/jacoco/test/html/index.html)
-- Tickets: [`backend/build/reports/jacoco/test/html/index.html`](../backend/build/reports/jacoco/test/html/index.html)
+- Android: [Reporte JaCoCo](reportes/android/cobertura/index.html)
+- Autenticación: [Reporte JaCoCo](reportes/autenticacion/cobertura/index.html)
+- Tickets: [Reporte JaCoCo](reportes/tickets/cobertura/index.html)
 
 Los resúmenes agregados muestran 97% de cobertura de líneas en Android, 97% en autenticación y 96% en tickets. Los umbrales de 80% se aplican a las clases de lógica indicadas en la configuración de cada módulo.
 
@@ -55,9 +55,9 @@ La compilación `debug` actual también se instaló y abrió en el emulador cone
 
 ## APK de release y llave de firma
 
-El APK local `app/build/outputs/apk/release/app-release.apk` tiene una firma válida v2, pero el archivo existente fue generado el 25 de noviembre de 2026, antes de los cambios actuales del código. La regeneración se intentó el 26 de noviembre y falló en `validateSigningRelease` con `Keystore file not set for signing config release`: no están configuradas las variables `RELEASE_KEYSTORE`, `RELEASE_KEY_ALIAS`, `RELEASE_STORE_PASSWORD` y `RELEASE_KEY_PASSWORD`. Por tanto, el archivo actual no debe presentarse como el APK final de esta revisión. El almacén `app/signing/mcmovilcare-release.jks` existe localmente y está excluido de Git; no se debe publicar ni incluir en capturas su contenido o contraseñas.
+La captura de PowerShell aportada el 27 de noviembre de 2026 muestra el APK `app/build/outputs/apk/release/app-release.apk` con fecha de modificación `27-11-2026 0:15:09`, tamaño de 46.902.443 bytes y resultado `Verifies`; `Verified using v2 scheme: true` confirma que la firma v2 de ese archivo es válida. Esto acredita la variante `release` y su firma, pero no sustituye una prueba de instalación y ejecución de ese APK.
 
-Cuando se genere el APK final, adjunta una captura de `apksigner verify --verbose --print-certs` ejecutado sobre ese mismo archivo, junto con una captura del nombre/ruta del almacén `.jks` sin abrirlo. Conserva el almacén y sus credenciales en un medio privado.
+La captura se recibió en la conversación, pero aún no está guardada en `docs/evidencias/` ni incorporada al PDF de entrega. Añádela al documento bajo el título **Verificación de firma del APK Release** y entrega junto con ella el APK final. El almacén de firma y sus contraseñas deben conservarse en privado; no los publiques en GitHub ni los muestres en la captura.
 
 ## Foto tomada con cámara
 

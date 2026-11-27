@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TicketService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.backend.service</a> &gt; <span class="el_source">TicketService.java</span></div><h1>TicketService.java</h1><pre class="source lang-java linenums">package com.mcmovilcare.backend.service;
+
+import com.mcmovilcare.backend.api.TicketDtos.CreateTicketRequest;
+import com.mcmovilcare.backend.api.TicketDtos.EditProblemRequest;
+import com.mcmovilcare.backend.api.TicketDtos.TicketResponse;
+import com.mcmovilcare.backend.domain.Ticket;
+import com.mcmovilcare.backend.domain.TicketRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+
+@Service
+public class TicketService {
+<span class="fc" id="L19">    private static final List&lt;String&gt; ESTADOS = List.of(</span>
+            &quot;Ingresado&quot;, &quot;En Diagnóstico&quot;, &quot;Esperando Autorización&quot;, &quot;Reparado&quot;, &quot;Entregado&quot;
+    );
+
+    private final TicketRepository repository;
+
+<span class="fc" id="L25">    public TicketService(TicketRepository repository) {</span>
+<span class="fc" id="L26">        this.repository = repository;</span>
+<span class="fc" id="L27">    }</span>
+
+    public TicketResponse crear(CreateTicketRequest request) {
+<span class="fc" id="L30">        String id = &quot;OT-&quot; + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT);</span>
+<span class="fc" id="L31">        Ticket ticket = new Ticket(id, request.clienteNombre().trim(), request.correoCliente().trim(),</span>
+<span class="fc" id="L32">                request.equipoModelo().trim(), request.numeroSerie().trim(), request.diagnostico().trim(),</span>
+                &quot;Ingresado&quot;, true);
+<span class="fc" id="L34">        return respuesta(repository.save(ticket));</span>
+    }
+
+    public TicketResponse buscarParaCliente(String id, String email) {
+<span class="fc" id="L38">        Ticket ticket = buscar(id);</span>
+<span class="fc" id="L39">        validarPropietario(ticket, email);</span>
+<span class="fc" id="L40">        return respuesta(ticket);</span>
+    }
+
+    public TicketResponse editarProblema(String id, String email, EditProblemRequest request) {
+<span class="fc" id="L44">        Ticket ticket = buscar(id);</span>
+<span class="fc" id="L45">        validarPropietario(ticket, email);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (request.diagnostico().isBlank()) {</span>
+<span class="fc" id="L47">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;El problema no puede quedar vacío&quot;);</span>
+        }
+<span class="fc" id="L49">        ticket.setDiagnostico(request.diagnostico().trim());</span>
+<span class="fc" id="L50">        return respuesta(repository.save(ticket));</span>
+    }
+
+    public List&lt;TicketResponse&gt; listarParaAdministrador() {
+<span class="fc" id="L54">        return repository.findAll(Sort.by(Sort.Direction.DESC, &quot;creadoEn&quot;))</span>
+<span class="fc" id="L55">                .stream().map(TicketService::respuesta).toList();</span>
+    }
+
+    public TicketResponse cambiarEstado(String id, String estado) {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (!ESTADOS.contains(estado)) {</span>
+<span class="fc" id="L60">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Estado de solicitud no válido&quot;);</span>
+        }
+<span class="fc" id="L62">        Ticket ticket = buscar(id);</span>
+<span class="fc" id="L63">        ticket.setEstado(estado);</span>
+<span class="fc" id="L64">        return respuesta(repository.save(ticket));</span>
+    }
+
+    public void eliminar(String id) {
+<span class="fc" id="L68">        repository.delete(buscar(id));</span>
+<span class="fc" id="L69">    }</span>
+
+    private Ticket buscar(String id) {
+<span class="fc" id="L72">        return repository.findById(id)</span>
+<span class="fc" id="L73">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Solicitud no encontrada&quot;));</span>
+    }
+
+    private void validarPropietario(Ticket ticket, String email) {
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">        if (email == null || !ticket.getCorreoCliente().trim().equalsIgnoreCase(email.trim())) {</span>
+<span class="fc" id="L78">            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;El correo no corresponde a esta solicitud&quot;);</span>
+        }
+<span class="fc" id="L80">    }</span>
+
+    private static TicketResponse respuesta(Ticket ticket) {
+<span class="fc" id="L83">        return new TicketResponse(ticket.getId(), ticket.getClienteNombre(), ticket.getCorreoCliente(),</span>
+<span class="fc" id="L84">                ticket.getEquipoModelo(), ticket.getNumeroSerie(), ticket.getDiagnostico(), ticket.getEstado(),</span>
+<span class="fc" id="L85">                ticket.isRequiereAutorizacion(), ticket.getCreadoEn());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

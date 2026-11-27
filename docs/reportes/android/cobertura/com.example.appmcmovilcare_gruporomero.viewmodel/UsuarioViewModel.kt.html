@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioViewModel.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.example.appmcmovilcare_gruporomero.viewmodel</a> &gt; <span class="el_source">UsuarioViewModel.kt</span></div><h1>UsuarioViewModel.kt</h1><pre class="source lang-java linenums">package com.example.appmcmovilcare_gruporomero.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.appmcmovilcare_gruporomero.data.local.AppDatabase
+import com.example.appmcmovilcare_gruporomero.data.local.OrdenDao
+import com.example.appmcmovilcare_gruporomero.data.local.OrdenTrabajoEntity
+import com.example.appmcmovilcare_gruporomero.data.remote.CreateTicketRequest
+import com.example.appmcmovilcare_gruporomero.data.remote.TicketDataSource
+import com.example.appmcmovilcare_gruporomero.data.remote.TicketRepository
+import com.example.appmcmovilcare_gruporomero.model.AdminUiState
+import com.example.appmcmovilcare_gruporomero.model.CatalogoUiState
+import com.example.appmcmovilcare_gruporomero.model.EdicionUiState
+import com.example.appmcmovilcare_gruporomero.model.ProductoUi
+import com.example.appmcmovilcare_gruporomero.model.RegistroUiState
+import com.example.appmcmovilcare_gruporomero.model.TicketFormValidator
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
+
+<span class="pc" id="L28">class UsuarioViewModel @JvmOverloads constructor(</span>
+    application: Application,
+<span class="pc" id="L30">    private val ordenDao: OrdenDao = AppDatabase.getDatabase(application).ordenDao(),</span>
+<span class="pc" id="L31">    private val repository: TicketDataSource = TicketRepository()</span>
+<span class="pc" id="L32">) : AndroidViewModel(application) {</span>
+
+<span class="nc" id="L34">    val ordenesLocales: StateFlow&lt;List&lt;OrdenTrabajoEntity&gt;&gt; =</span>
+<span class="fc" id="L35">        ordenDao.obtenerTodasLasOrdenes().stateIn(</span>
+<span class="fc" id="L36">            scope = viewModelScope,</span>
+<span class="fc" id="L37">            started = SharingStarted.WhileSubscribed(5000),</span>
+<span class="fc" id="L38">            initialValue = emptyList()</span>
+        )
+
+<span class="fc" id="L41">    private val _uiState = MutableStateFlow(RegistroUiState())</span>
+<span class="fc" id="L42">    val uiState: StateFlow&lt;RegistroUiState&gt; = _uiState.asStateFlow()</span>
+
+<span class="fc" id="L44">    private val _ultimaOrdenCreada = MutableStateFlow&lt;OrdenTrabajoEntity?&gt;(null)</span>
+<span class="fc" id="L45">    val ultimaOrdenCreada: StateFlow&lt;OrdenTrabajoEntity?&gt; = _ultimaOrdenCreada.asStateFlow()</span>
+
+<span class="fc" id="L47">    private val _edicionUiState = MutableStateFlow(EdicionUiState())</span>
+<span class="fc" id="L48">    val edicionUiState: StateFlow&lt;EdicionUiState&gt; = _edicionUiState.asStateFlow()</span>
+
+<span class="fc" id="L50">    private val _adminUiState = MutableStateFlow(AdminUiState())</span>
+<span class="fc" id="L51">    val adminUiState: StateFlow&lt;AdminUiState&gt; = _adminUiState.asStateFlow()</span>
+
+<span class="fc" id="L53">    private val _catalogoUiState = MutableStateFlow(CatalogoUiState())</span>
+<span class="fc" id="L54">    val catalogoUiState: StateFlow&lt;CatalogoUiState&gt; = _catalogoUiState.asStateFlow()</span>
+
+    fun cargarCatalogo() {
+<span class="pc bpc" id="L57" title="1 of 6 branches missed.">        if (_catalogoUiState.value.cargando || _catalogoUiState.value.productos.isNotEmpty()) return</span>
+<span class="fc" id="L58">        viewModelScope.launch {</span>
+<span class="fc" id="L59">            _catalogoUiState.update { it.copy(cargando = true, error = null) }</span>
+<span class="fc" id="L60">            try {</span>
+<span class="fc" id="L61">                val productos = repository.cargarProductos().map {</span>
+<span class="fc" id="L62">                    ProductoUi(id = it.id, titulo = it.title, precio = it.price)</span>
+                }
+<span class="fc" id="L64">                _catalogoUiState.value = CatalogoUiState(productos = productos)</span>
+<span class="fc" id="L65">            } catch (error: Exception) {</span>
+<span class="fc" id="L66">                _catalogoUiState.update { it.copy(cargando = false, error = &quot;No se pudo cargar el catálogo externo&quot;) }</span>
+            }
+<span class="fc" id="L68">        }</span>
+<span class="fc" id="L69">    }</span>
+
+    fun onNombreChanged(nuevo: String) {
+<span class="fc" id="L72">        _uiState.update { it.copy(clienteNombre = nuevo, errorRegistro = null) }</span>
+<span class="fc" id="L73">        validarFormulario()</span>
+<span class="fc" id="L74">    }</span>
+
+    fun onCorreoChanged(nuevo: String) {
+<span class="fc" id="L77">        _uiState.update { it.copy(correoCliente = nuevo, errorRegistro = null) }</span>
+<span class="fc" id="L78">        validarFormulario()</span>
+<span class="fc" id="L79">    }</span>
+
+    fun onModeloChanged(nuevo: String) {
+<span class="fc" id="L82">        _uiState.update { it.copy(equipoModelo = nuevo, errorRegistro = null) }</span>
+<span class="fc" id="L83">        validarFormulario()</span>
+<span class="fc" id="L84">    }</span>
+
+    fun onSerieChanged(nuevo: String) {
+<span class="fc" id="L87">        _uiState.update { it.copy(numeroSerie = nuevo, errorRegistro = null) }</span>
+<span class="fc" id="L88">        validarFormulario()</span>
+<span class="fc" id="L89">    }</span>
+
+    fun onDiagnosticoChanged(nuevo: String) {
+<span class="fc" id="L92">        _uiState.update { it.copy(diagnostico = nuevo, errorRegistro = null) }</span>
+<span class="fc" id="L93">    }</span>
+
+    fun onImagenCapturada(uri: String) {
+<span class="fc" id="L96">        _uiState.update { it.copy(imagenUri = uri) }</span>
+<span class="fc" id="L97">    }</span>
+
+    fun onImagenEliminada() {
+<span class="fc" id="L100">        _uiState.update { it.copy(imagenUri = null) }</span>
+<span class="fc" id="L101">    }</span>
+
+    private fun validarFormulario() {
+<span class="fc" id="L104">        val state = _uiState.value</span>
+<span class="fc" id="L105">        val validation = TicketFormValidator.validar(</span>
+<span class="fc" id="L106">            state.clienteNombre, state.correoCliente, state.equipoModelo, state.numeroSerie</span>
+        )
+<span class="fc" id="L108">        _uiState.update {</span>
+<span class="fc" id="L109">            it.copy(</span>
+<span class="fc" id="L110">                errorNombre = validation.errorNombre,</span>
+<span class="fc" id="L111">                errorCorreo = validation.errorCorreo,</span>
+<span class="fc" id="L112">                errorModelo = validation.errorModelo,</span>
+<span class="fc" id="L113">                errorSerie = validation.errorSerie,</span>
+<span class="fc" id="L114">                esFormularioValido = validation.esValido</span>
+<span class="fc" id="L115">            )</span>
+        }
+<span class="fc" id="L117">    }</span>
+
+    fun guardarOrden(onExito: () -&gt; Unit) {
+<span class="fc" id="L120">        val state = _uiState.value</span>
+<span class="fc bfc" id="L121" title="All 4 branches covered.">        if (!state.esFormularioValido || state.diagnostico.isBlank()) {</span>
+<span class="fc" id="L122">            _uiState.update { it.copy(errorRegistro = &quot;Completa los datos y describe el problema del equipo&quot;) }</span>
+<span class="fc" id="L123">            return</span>
+        }
+<span class="fc" id="L125">        viewModelScope.launch {</span>
+<span class="fc" id="L126">            _uiState.update { it.copy(cargandoRegistro = true, errorRegistro = null) }</span>
+<span class="fc" id="L127">            try {</span>
+<span class="fc" id="L128">                val remote = repository.crear(</span>
+<span class="fc" id="L129">                    CreateTicketRequest(</span>
+<span class="fc" id="L130">                        clienteNombre = state.clienteNombre.trim(),</span>
+<span class="fc" id="L131">                        correoCliente = state.correoCliente.trim(),</span>
+<span class="fc" id="L132">                        equipoModelo = state.equipoModelo.trim(),</span>
+<span class="fc" id="L133">                        numeroSerie = state.numeroSerie.trim(),</span>
+<span class="fc" id="L134">                        diagnostico = state.diagnostico.trim()</span>
+                    )
+                )
+<span class="fc" id="L137">                val nuevaOrden = remote.toEntity().copy(imagenEvidenciaUri = state.imagenUri)</span>
+<span class="fc" id="L138">                ordenDao.insertarOrden(nuevaOrden)</span>
+<span class="fc" id="L139">                _ultimaOrdenCreada.value = nuevaOrden</span>
+<span class="fc" id="L140">                _uiState.value = RegistroUiState()</span>
+<span class="fc" id="L141">                onExito()</span>
+<span class="fc" id="L142">            } catch (error: Exception) {</span>
+<span class="fc" id="L143">                _uiState.update { it.copy(cargandoRegistro = false, errorRegistro = mensajeError(error)) }</span>
+            }
+<span class="fc" id="L145">        }</span>
+<span class="fc" id="L146">    }</span>
+
+    fun onEditIdChanged(value: String) {
+<span class="fc" id="L149">        _edicionUiState.update { it.copy(id = value.trim(), solicitudEncontrada = false, error = null, mensaje = null) }</span>
+<span class="fc" id="L150">    }</span>
+
+    fun onEditEmailChanged(value: String) {
+<span class="fc" id="L153">        _edicionUiState.update { it.copy(correo = value.trim(), solicitudEncontrada = false, error = null, mensaje = null) }</span>
+<span class="fc" id="L154">    }</span>
+
+    fun buscarSolicitudCliente() {
+<span class="fc" id="L157">        val state = _edicionUiState.value</span>
+<span class="pc bpc" id="L158" title="1 of 4 branches missed.">        if (state.id.isBlank() || state.correo.isBlank()) {</span>
+<span class="fc" id="L159">            _edicionUiState.update { it.copy(error = &quot;Ingresa el número de solicitud y el correo registrado&quot;) }</span>
+<span class="fc" id="L160">            return</span>
+        }
+<span class="fc" id="L162">        viewModelScope.launch {</span>
+<span class="fc" id="L163">            _edicionUiState.update { it.copy(cargando = true, error = null, mensaje = null) }</span>
+<span class="fc" id="L164">            try {</span>
+<span class="fc" id="L165">                val ticket = repository.buscarParaCliente(state.id, state.correo).toEntity()</span>
+<span class="fc" id="L166">                ordenDao.insertarOrden(ticket)</span>
+<span class="fc" id="L167">                _edicionUiState.update {</span>
+<span class="fc" id="L168">                    it.copy(cargando = false, problema = ticket.diagnostico, solicitudEncontrada = true)</span>
+                }
+<span class="fc" id="L170">            } catch (error: Exception) {</span>
+<span class="fc" id="L171">                _edicionUiState.update { it.copy(cargando = false, error = mensajeError(error)) }</span>
+            }
+<span class="fc" id="L173">        }</span>
+<span class="fc" id="L174">    }</span>
+
+    fun onEditProblemChanged(value: String) {
+<span class="fc" id="L177">        _edicionUiState.update { it.copy(problema = value, error = null, mensaje = null) }</span>
+<span class="fc" id="L178">    }</span>
+
+    fun guardarEdicionCliente() {
+<span class="fc" id="L181">        val state = _edicionUiState.value</span>
+<span class="pc bpc" id="L182" title="1 of 4 branches missed.">        if (!state.solicitudEncontrada || state.problema.isBlank()) {</span>
+<span class="fc" id="L183">            _edicionUiState.update { it.copy(error = &quot;El problema no puede quedar vacío&quot;) }</span>
+<span class="fc" id="L184">            return</span>
+        }
+<span class="fc" id="L186">        viewModelScope.launch {</span>
+<span class="fc" id="L187">            _edicionUiState.update { it.copy(cargando = true, error = null, mensaje = null) }</span>
+<span class="fc" id="L188">            try {</span>
+<span class="fc" id="L189">                val ticket = repository.editarProblema(state.id, state.correo, state.problema.trim()).toEntity()</span>
+<span class="fc" id="L190">                ordenDao.insertarOrden(ticket)</span>
+<span class="fc" id="L191">                _edicionUiState.update { it.copy(cargando = false, problema = ticket.diagnostico, mensaje = &quot;Problema actualizado&quot;) }</span>
+<span class="fc" id="L192">            } catch (error: Exception) {</span>
+<span class="fc" id="L193">                _edicionUiState.update { it.copy(cargando = false, error = mensajeError(error)) }</span>
+            }
+<span class="fc" id="L195">        }</span>
+<span class="fc" id="L196">    }</span>
+
+    fun iniciarSesionAdministrador(email: String, password: String, onExito: () -&gt; Unit) {
+<span class="fc" id="L199">        viewModelScope.launch {</span>
+<span class="fc" id="L200">            _adminUiState.update { it.copy(cargando = true, error = null) }</span>
+<span class="fc" id="L201">            try {</span>
+<span class="fc" id="L202">                val response = repository.iniciarSesion(email.trim(), password)</span>
+<span class="fc" id="L203">                _adminUiState.update { it.copy(cargando = false, token = response.token, error = null) }</span>
+<span class="fc" id="L204">                onExito()</span>
+<span class="fc" id="L205">            } catch (error: Exception) {</span>
+<span class="fc" id="L206">                _adminUiState.update { it.copy(cargando = false, error = mensajeError(error)) }</span>
+            }
+<span class="fc" id="L208">        }</span>
+<span class="fc" id="L209">    }</span>
+
+    fun cargarSolicitudesAdministrador() {
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        val token = _adminUiState.value.token ?: return</span>
+<span class="fc" id="L213">        viewModelScope.launch {</span>
+<span class="fc" id="L214">            _adminUiState.update { it.copy(cargando = true, error = null) }</span>
+<span class="fc" id="L215">            try {</span>
+<span class="fc" id="L216">                val tickets = repository.listarAdministrador(token)</span>
+<span class="fc" id="L217">                _adminUiState.update { it.copy(cargando = false, solicitudes = tickets) }</span>
+<span class="fc" id="L218">            } catch (error: Exception) {</span>
+<span class="fc" id="L219">                _adminUiState.update { it.copy(cargando = false, error = mensajeError(error)) }</span>
+            }
+<span class="fc" id="L221">        }</span>
+<span class="fc" id="L222">    }</span>
+
+    fun cambiarEstadoAdministrador(id: String, estado: String) {
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        val token = _adminUiState.value.token ?: return</span>
+<span class="fc" id="L226">        viewModelScope.launch {</span>
+<span class="fc" id="L227">            try {</span>
+<span class="fc" id="L228">                val updated = repository.cambiarEstado(token, id, estado)</span>
+<span class="fc" id="L229">                _adminUiState.update { state -&gt;</span>
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">                    state.copy(solicitudes = state.solicitudes.map { if (it.id == id) updated else it }, error = null)</span>
+                }
+<span class="fc" id="L232">            } catch (error: Exception) {</span>
+<span class="fc" id="L233">                _adminUiState.update { it.copy(error = mensajeError(error)) }</span>
+            }
+<span class="fc" id="L235">        }</span>
+<span class="fc" id="L236">    }</span>
+
+    fun eliminarSolicitudAdministrador(id: String) {
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        val token = _adminUiState.value.token ?: return</span>
+<span class="fc" id="L240">        viewModelScope.launch {</span>
+<span class="fc" id="L241">            try {</span>
+<span class="fc" id="L242">                repository.eliminar(token, id)</span>
+<span class="fc" id="L243">                ordenDao.eliminarPorId(id)</span>
+<span class="fc" id="L244">                _adminUiState.update { state -&gt; state.copy(solicitudes = state.solicitudes.filterNot { it.id == id }) }</span>
+<span class="fc" id="L245">            } catch (error: Exception) {</span>
+<span class="fc" id="L246">                _adminUiState.update { it.copy(error = mensajeError(error)) }</span>
+            }
+<span class="fc" id="L248">        }</span>
+<span class="fc" id="L249">    }</span>
+
+    fun cerrarSesionAdministrador(onCerrada: () -&gt; Unit) {
+<span class="fc" id="L252">        val token = _adminUiState.value.token</span>
+<span class="fc" id="L253">        viewModelScope.launch {</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">            if (token != null) {</span>
+<span class="fc" id="L255">                runCatching { repository.cerrarSesion(token) }</span>
+            }
+<span class="fc" id="L257">            _adminUiState.value = AdminUiState()</span>
+<span class="fc" id="L258">            onCerrada()</span>
+<span class="fc" id="L259">        }</span>
+<span class="fc" id="L260">    }</span>
+
+<span class="fc" id="L262">    private fun mensajeError(error: Exception): String = when (error) {</span>
+<span class="fc bfc" id="L263" title="All 6 branches covered.">        is HttpException -&gt; when (error.code()) {</span>
+<span class="fc" id="L264">            401 -&gt; &quot;Acceso no autorizado. Revisa las credenciales o inicia sesión nuevamente.&quot;</span>
+<span class="fc" id="L265">            403 -&gt; &quot;Los datos no corresponden a esta solicitud.&quot;</span>
+<span class="fc" id="L266">            404 -&gt; &quot;No se encontró la solicitud indicada.&quot;</span>
+<span class="fc" id="L267">            else -&gt; &quot;El servidor respondió con error (${error.code()}).&quot;</span>
+        }
+<span class="fc bfc" id="L269" title="All 2 branches covered.">        is IOException -&gt; &quot;No se pudo conectar con el servidor. Comprueba que el backend esté ejecutándose.&quot;</span>
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        else -&gt; error.localizedMessage ?: &quot;Ocurrió un error inesperado.&quot;</span>
+<span class="fc" id="L271">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
