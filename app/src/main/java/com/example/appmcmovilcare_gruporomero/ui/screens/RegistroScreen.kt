@@ -1,7 +1,5 @@
 package com.example.appmcmovilcare_gruporomero.ui.screens
 
-import android.Manifest
-import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +29,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.appmcmovilcare_gruporomero.viewmodel.UsuarioViewModel
 import java.io.File
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,51 +42,72 @@ fun RegistroScreen(
     val context = LocalContext.current
 
 
-    var tempUri by remember { mutableStateOf<Uri?>(null) }
-    var showPermissionDenied by remember { mutableStateOf(false) }
+    var evidenceError by remember { mutableStateOf<String?>(null) }
+    var pendingPhotoFile by remember { mutableStateOf<File?>(null) }
+
+    fun createEvidenceFile(): File {
+        val directory = File(context.filesDir, "evidencias")
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw IOException("No se pudo preparar el almacenamiento de evidencias")
+        }
+        return File(directory, "evidencia_${System.currentTimeMillis()}.jpg")
+    }
+
+    fun createEvidenceUri(file: File): Uri = FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        file
+    )
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
-    ) { exitoso ->
-        if (exitoso && tempUri != null) {
-            viewModel.onImagenCapturada(tempUri.toString())
+    ) { saved ->
+        val photoFile = pendingPhotoFile
+        pendingPhotoFile = null
+        if (saved && photoFile != null && photoFile.isFile && photoFile.length() > 0) {
+            evidenceError = null
+            viewModel.onImagenCapturada(createEvidenceUri(photoFile).toString())
+        } else {
+            photoFile?.delete()
+            evidenceError = if (saved) {
+                "La cámara no generó una foto válida. Intenta nuevamente o selecciona una imagen de la galería."
+            } else {
+                "No se tomó ninguna foto. Intenta nuevamente o selecciona una imagen de la galería."
+            }
         }
     }
 
-    // Permiso de cámara dinámico
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            val file = File(context.cacheDir, "evidencia_${System.currentTimeMillis()}.jpg")
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
-            tempUri = uri
-            cameraLauncher.launch(uri)
-        } else {
-            // Permiso denegado
-            showPermissionDenied = true
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { selectedUri ->
+        if (selectedUri != null) {
+            try {
+                val file = createEvidenceFile()
+                val copied = context.contentResolver.openInputStream(selectedUri)?.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                } ?: throw IOException("No se pudo leer la imagen seleccionada")
+                if (copied > 0 && file.length() > 0) {
+                    evidenceError = null
+                    viewModel.onImagenCapturada(createEvidenceUri(file).toString())
+                } else {
+                    evidenceError = "La imagen seleccionada está vacía. Intenta con otra foto."
+                }
+            } catch (_: Exception) {
+                evidenceError = "No se pudo adjuntar la imagen. Intenta seleccionar otra foto."
+            }
         }
     }
 
     fun tomarFoto() {
-        showPermissionDenied = false
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        } else {
-
-            val file = File(context.cacheDir, "evidencia_${System.currentTimeMillis()}.jpg")
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
-            tempUri = uri
-            cameraLauncher.launch(uri)
+        evidenceError = null
+        try {
+            val file = createEvidenceFile()
+            pendingPhotoFile = file
+            cameraLauncher.launch(createEvidenceUri(file))
+        } catch (_: Exception) {
+            pendingPhotoFile?.delete()
+            pendingPhotoFile = null
+            evidenceError = "No se pudo abrir la cámara. Verifica que haya una app de cámara instalada o selecciona una imagen de la galería."
         }
     }
 
@@ -253,17 +273,13 @@ fun RegistroScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            AnimatedVisibility(
-                visible = showPermissionDenied,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
+            evidenceError?.let { error ->
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "⚠️ Se necesita el permiso de cámara para tomar fotos. Por favor, habilita el permiso en la configuración de la app.",
+                        text = error,
                         modifier = Modifier.padding(12.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onErrorContainer
@@ -276,7 +292,20 @@ fun RegistroScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
-                Text(if (state.imagenUri == null) " Tomar Foto de Evidencia" else " Cambiar Foto Capturada")
+                Text(if (state.imagenUri == null) "Tomar foto de evidencia" else "Cambiar foto capturada")
+            }
+
+            Text(
+                text = "Se abrirá la cámara del dispositivo; al confirmar, la foto se adjuntará a la solicitud.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            OutlinedButton(
+                onClick = { galleryLauncher.launch("image/*") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Seleccionar imagen de la galería")
             }
 
 

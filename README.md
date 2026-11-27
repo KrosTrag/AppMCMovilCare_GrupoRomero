@@ -109,8 +109,8 @@ Android Gradle Plugin detiene el empaquetado release si falta la configuración 
 
 ## Entrega colaborativa
 
-El código fuente y los commits técnicos se publican en [GitHub](https://github.com/KrosTrag/AppMCMovilCare_GrupoRomero). Este trabajo fue realizado individualmente por Anthony Alexander Romero Bracamonte; no se atribuyen aportes a otros integrantes. Aún falta crear y utilizar un tablero Trello real y adjuntar capturas/enlaces de sus tarjetas; `docs/PLANIFICACION_TRELLO.md` contiene una guía y tarjetas sugeridas, pero no sustituye esa evidencia.
+El código fuente y los commits técnicos se publican en [GitHub](https://github.com/KrosTrag/AppMCMovilCare_GrupoRomero). Este trabajo fue realizado individualmente por Anthony Alexander Romero Bracamonte; no se atribuyen aportes a otros integrantes. Incluye en la entrega la captura o el enlace del tablero Trello utilizado; `docs/PLANIFICACION_TRELLO.md` es una guía y no sustituye esa evidencia.
 
 ## Documentación técnica
 
-Consulta [docs/TECNICA.md](docs/TECNICA.md) para detalles del diseño, API, decisiones de seguridad y proceso de publicación.
+Consulta [docs/TECNICA.md](docs/TECNICA.md) para detalles del diseño, API, decisiones de seguridad y proceso de publicación. El [índice de evidencias](docs/EVIDENCIAS.md) reúne los resultados de pruebas, cobertura y capturas disponibles.
